@@ -15,7 +15,7 @@ All notable changes to this project will be documented in this file.
 - Added `NOTICE` with upstream credit and A/B testing naming rationale.
 - Added persistent `evo-research.population.json` population-state helpers and schema documentation for long evolutionary runs.
 - Added population scheduler/update hook examples for deterministic candidate mutation, novelty, and family retirement.
-- Added tests for population bootstrap, update, selection, stagnation, and family retirement behavior.
+- Added tests for population bootstrap, update, selection, stagnation, family retirement behavior, and hook runtime smoke coverage.
 
 ## [1.4.0] - 2026-05-06
 

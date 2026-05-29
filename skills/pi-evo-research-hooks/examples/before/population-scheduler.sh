@@ -16,6 +16,11 @@ if [ ! -s "$file" ]; then
   exit 0
 fi
 
+if ! jq empty "$file" >/dev/null 2>&1; then
+  echo "Population: $POPULATION_FILE is invalid JSON; inspect or remove it before relying on scheduler state."
+  exit 0
+fi
+
 jq -r --argjson session "$session_json" '
   def direction: if $session.direction == "higher" then "higher" else "lower" end;
   def scheduler: {

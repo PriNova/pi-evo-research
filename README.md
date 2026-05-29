@@ -242,9 +242,11 @@ Hooks can act as a lightweight evolutionary scheduler without changing the exten
 - `evo-research.hooks/after.sh`: read latest JSONL entry, update `evo-research.population.json`, retire weak families.
 - `evo-research.hooks/before.sh`: read `evo-research.population.json` and print the next candidate suggestion as a steer message.
 
-Reference examples ship with the hooks skill:
+Reference examples ship with the hooks skill. They require `jq` at runtime because hook payloads are JSON:
 
 ```bash
+# Termux: pkg install jq
+# macOS:  brew install jq
 mkdir -p evo-research.hooks
 cp "<skill-dir>/examples/after/population-update.sh" evo-research.hooks/after.sh
 cp "<skill-dir>/examples/before/population-scheduler.sh" evo-research.hooks/before.sh

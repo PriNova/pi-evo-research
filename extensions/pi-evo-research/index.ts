@@ -51,6 +51,7 @@ import {
   buildEvoResearchCompactionSummary,
 } from "./compaction.ts";
 import { resolveEvoResearchShortcuts } from "./shortcuts.ts";
+import { POPULATION_FILE_NAME } from "./population.ts";
 
 // ---------------------------------------------------------------------------
 // Experiment output limits (sent to LLM — keep small to save context)
@@ -512,6 +513,7 @@ const evoResearchIdeasPath  = (dir: string) => path.join(dir, "evo-research.idea
 const evoResearchChecksPath = (dir: string) => path.join(dir, "evo-research.checks.sh");
 const evoResearchScriptPath = (dir: string) => path.join(dir, "evo-research.sh");
 const evoResearchConfigPath = (dir: string) => path.join(dir, "evo-research.config.json");
+const evoResearchPopulationPath = (dir: string) => path.join(dir, POPULATION_FILE_NAME);
 
 function findBaselineRunNumber(results: ExperimentResult[], segment: number): number | null {
   const index = results.findIndex((result) => result.segment === segment);
@@ -1503,6 +1505,9 @@ export default function evoResearchExtension(pi: ExtensionAPI) {
     const ideasPath = evoResearchIdeasPath(workDir);
     const hasIdeas = fs.existsSync(ideasPath);
 
+    const populationPath = evoResearchPopulationPath(workDir);
+    const hasPopulation = fs.existsSync(populationPath);
+
     const checksPath = evoResearchChecksPath(workDir);
     const hasChecks = fs.existsSync(checksPath);
 
@@ -1527,6 +1532,10 @@ export default function evoResearchExtension(pi: ExtensionAPI) {
 
     if (hasIdeas) {
       extra += `\n\n💡 Ideas backlog exists at ${ideasPath} — check it for promising experiment paths. Prune stale entries.`;
+    }
+
+    if (hasPopulation) {
+      extra += `\n\n🧬 Population state exists at ${populationPath} — use hook steer messages and keep ASI candidate fields current.`;
     }
 
     return {

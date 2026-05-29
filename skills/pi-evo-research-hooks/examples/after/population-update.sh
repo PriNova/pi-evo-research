@@ -13,7 +13,7 @@ run_json="$(jq -c '.run_entry' <<<"$input")"
 session_json="$(jq -c '.session' <<<"$input")"
 
 mkdir -p "$cwd"
-if [ ! -s "$file" ]; then
+create_default_population() {
   jq -n '{
     schema_version: 1,
     generation: 0,
@@ -26,7 +26,14 @@ if [ ! -s "$file" ]; then
       novelty_after_stagnation_runs: 5,
       elite_limit: 3
     }
-  }' > "$file"
+  }'
+}
+
+if [ ! -s "$file" ]; then
+  create_default_population > "$file"
+elif ! jq empty "$file" >/dev/null 2>&1; then
+  mv "$file" "$file.invalid"
+  create_default_population > "$file"
 fi
 
 tmp="$(mktemp)"

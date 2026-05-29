@@ -9,7 +9,7 @@ cp "<skill-dir>/examples/before/external-search.sh" /path/to/session/evo-researc
 chmod +x /path/to/session/evo-research.hooks/before.sh
 ```
 
-The files here are **not** marked executable on purpose — they're references, not installed hooks. A `chmod +x` step is required when you wire one up.
+The files here are **not** marked executable on purpose — they're references, not installed hooks. A `chmod +x` step is required when you wire one up. Scripts parse JSON with `jq`; install it first (`pkg install jq` on Termux, `brew install jq` on macOS).
 
 For the hook contract (stdin schemas, stdout handling, timeouts, observability), see the main [README §Hooks](../../../README.md#hooks-optional).
 
