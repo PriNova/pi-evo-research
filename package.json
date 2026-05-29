@@ -1,0 +1,70 @@
+{
+  "name": "pi-evo-research",
+  "version": "1.4.0",
+  "type": "module",
+  "description": "Population-guided evolutionary research for pi — evolve hypotheses, run measured experiments, keep what works.",
+  "keywords": [
+    "pi-package",
+    "pi",
+    "pi-extension",
+    "experiment",
+    "optimization",
+    "benchmark",
+    "coding-agent",
+    "evolutionary-search",
+    "population-search",
+    "agent-optimization",
+    "pi-evo-research",
+    "evo-research"
+  ],
+  "license": "MIT",
+  "author": "PriNova",
+  "homepage": "https://github.com/PriNova/pi-evo-research#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/PriNova/pi-evo-research.git"
+  },
+  "bugs": {
+    "url": "https://github.com/PriNova/pi-evo-research/issues"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "packageManager": "pnpm@10.28.2",
+  "pi": {
+    "extensions": [
+      "./extensions"
+    ],
+    "skills": [
+      "./skills"
+    ]
+  },
+  "files": [
+    "extensions",
+    "skills",
+    "assets",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE",
+    "package.json",
+    "NOTICE"
+  ],
+  "scripts": {
+    "test": "node --experimental-strip-types --test tests/*.test.mjs"
+  },
+  "peerDependencies": {
+    "@sinclair/typebox": "*",
+    "@earendil-works/pi-ai": "*",
+    "@earendil-works/pi-coding-agent": "*",
+    "@earendil-works/pi-tui": "*"
+  },
+  "devDependencies": {
+    "@sinclair/typebox": "^0.34.41",
+    "@earendil-works/pi-ai": "^0.77.0",
+    "@earendil-works/pi-coding-agent": "^0.77.0",
+    "@earendil-works/pi-tui": "^0.77.0"
+  },
+  "contributors": [
+    "David Cortés <477473+davebcn87@users.noreply.github.com>"
+  ]
+}
