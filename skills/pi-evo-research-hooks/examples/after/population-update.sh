@@ -36,6 +36,11 @@ elif ! jq empty "$file" >/dev/null 2>&1; then
   create_default_population > "$file"
 fi
 
+run_number="$(jq -r '.run_entry.run // 0' <<<"$input")"
+if jq -e --argjson run_number "$run_number" 'any(.candidates[]?.fitness_history[]?; .run == $run_number)' "$file" >/dev/null; then
+  exit 0
+fi
+
 tmp="$(mktemp)"
 
 jq --argjson run "$run_json" --argjson session "$session_json" '

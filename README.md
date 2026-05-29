@@ -107,7 +107,7 @@ The agent will ask or infer:
 - files in scope
 - constraints and off-limits areas
 
-It writes session files, runs a baseline, then loops:
+It writes session files, creates `evo-research.population.json`, runs a baseline, then loops:
 
 ```text
 inspect → propose candidate → edit → run_experiment → log_experiment → keep/discard → update population → repeat
@@ -182,13 +182,14 @@ The agent logs this through `log_experiment({ asi: ... })`. The extension alread
 | `evo-research.population.json` | Optional persistent population state for broad or long evolutionary runs |
 | `evo-research.hooks/` | Optional before/after scripts for session automation |
 
-`evo-research.population.json` is implemented as a small, inspectable MVP. It is optional: short sessions can rely on `evo-research.jsonl`, ASI, and `evo-research.ideas.md`; longer searches can use the population file to rank candidates, track family failures, and trigger novelty after stagnation.
+`evo-research.population.json` is created and maintained by the extension. It is small, inspectable state for ranking candidates, tracking family failures, and triggering novelty after stagnation.
 
 Minimal lifecycle:
 
-1. `after.sh` updates population state from the latest `log_experiment` entry and ASI.
-2. `before.sh` reads population state and prints a steer message for the next candidate.
-3. Benchmark results remain the source of truth; population state only guides which hypothesis to try next.
+1. `/evo-research` or `init_experiment` creates population state when needed.
+2. `log_experiment` updates population state from the latest result and ASI.
+3. Before the next iteration, evo-research prints a deterministic population steer message.
+4. Benchmark results remain the source of truth; population state only guides which hypothesis to try next.
 
 Core shape:
 
@@ -237,16 +238,16 @@ This lets a resumed agent continue the search without relying on chat history.
 
 ## Hooks
 
-Hooks can act as a lightweight evolutionary scheduler without changing the extension:
+The extension handles population scheduling by default. Hooks remain available for custom automation or for users who want to replace/augment the default policy:
 
-- `evo-research.hooks/after.sh`: read latest JSONL entry, update `evo-research.population.json`, retire weak families.
-- `evo-research.hooks/before.sh`: read `evo-research.population.json` and print the next candidate suggestion as a steer message.
+- `evo-research.hooks/after.sh`: run retrospective automation after a logged result.
+- `evo-research.hooks/before.sh`: print additional steer messages before the next iteration.
 
-Reference examples ship with the hooks skill. They require `jq` at runtime because hook payloads are JSON:
+Reference population hook examples still ship with the hooks skill as editable shell equivalents of the default policy. They require `jq` at runtime because hook payloads are JSON:
 
 ```bash
-# Termux: pkg install jq
-# macOS:  brew install jq
+# Linux: install jq with your distro package manager, e.g. apt install jq
+# macOS: brew install jq
 mkdir -p evo-research.hooks
 cp "<skill-dir>/examples/after/population-update.sh" evo-research.hooks/after.sh
 cp "<skill-dir>/examples/before/population-scheduler.sh" evo-research.hooks/before.sh

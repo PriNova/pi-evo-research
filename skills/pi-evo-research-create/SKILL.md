@@ -19,8 +19,7 @@ Population-guided autonomous experiment loop: maintain candidate hypotheses, try
 2. `git checkout -b evo-research/<goal>-<date>`
 3. Read the source files. Understand the workload deeply before writing anything.
 4. Write `evo-research.md` and `evo-research.sh` (see below). Commit both.
-5. For broad, noisy, or multi-knob tasks, optionally enable population hooks so `evo-research.population.json` can guide candidate scheduling.
-6. `init_experiment` → run baseline → `log_experiment` → start looping immediately.
+5. `init_experiment` → run baseline → `log_experiment` → start looping immediately. The extension creates and updates `evo-research.population.json` automatically.
 
 ### `evo-research.md`
 
@@ -80,7 +79,7 @@ The script runs the same code every iteration — but you can **update it during
 
 Use `log_experiment`'s `asi` parameter to annotate each run with **whatever would help the next iteration make a better decision.** Free-form key/value pairs — you decide what's worth recording. Don't repeat the description or raw output; capture what you'd lose after a context reset.
 
-For population-guided runs, include these ASI fields whenever possible: `candidate_id`, `generation`, `family`, `parent_id`, `operator`, `hypothesis`, `genome`, `outcome_learning`, `next_mutation`. The population hooks use them to update `evo-research.population.json` without a new tool contract.
+For population-guided runs, include these ASI fields whenever possible: `candidate_id`, `generation`, `family`, `parent_id`, `operator`, `hypothesis`, `genome`, `outcome_learning`, `next_mutation`. The extension uses them to update `evo-research.population.json` without a new tool contract.
 
 **Annotate failures and crashes heavily.** Discarded and crashed runs are reverted — the code changes are gone. The only record that survives is the description and ASI in `evo-research.jsonl`. If you don't capture what you tried and why it failed, future iterations will waste time re-discovering the same dead ends.
 
@@ -145,7 +144,7 @@ Maintain a small population of candidate families in `evo-research.ideas.md`, `a
 - **Seed** diverse candidates from source reading, profiling, and domain knowledge.
 - **Evaluate** one candidate per experiment against the global primary metric.
 - **Select** kept candidates with passing checks, meaningful improvement, and acceptable complexity.
-- **Mutate** promising candidates with small variants or parameter changes; when population hooks are enabled, follow `before.sh` steer messages unless repo evidence says they are stale.
+- **Mutate** promising candidates with small variants or parameter changes; follow population steer messages unless repo evidence says they are stale.
 - **Simplify** winners after gains are found.
 - **Recombine** only independent kept ideas with understood interactions; never do textual code crossover.
 - **Inject novelty** after stagnation or repeated failures in one family. The population scheduler does this deterministically after its configured stagnation threshold.

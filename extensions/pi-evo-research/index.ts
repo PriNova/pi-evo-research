@@ -51,7 +51,14 @@ import {
   buildEvoResearchCompactionSummary,
 } from "./compaction.ts";
 import { resolveEvoResearchShortcuts } from "./shortcuts.ts";
-import { POPULATION_FILE_NAME } from "./population.ts";
+import {
+  POPULATION_FILE_NAME,
+  defaultPopulation,
+  readPopulationFile,
+  writePopulationFile,
+  updatePopulationFromRun,
+  recommendNextCandidate,
+} from "./population.ts";
 
 // ---------------------------------------------------------------------------
 // Experiment output limits (sent to LLM — keep small to save context)
@@ -1162,6 +1169,53 @@ export default function evoResearchExtension(pi: ExtensionAPI) {
     return steerMessageFor(payload.event, result);
   };
 
+  const ensurePopulationFile = (workDir: string): void => {
+    const populationPath = evoResearchPopulationPath(workDir);
+    if (!fs.existsSync(populationPath)) {
+      writePopulationFile(populationPath, defaultPopulation());
+    }
+  };
+
+  const updatePopulationState = (
+    workDir: string,
+    runEntry: Record<string, unknown>,
+    session: SessionSnapshot,
+  ): string | null => {
+    const populationPath = evoResearchPopulationPath(workDir);
+    const before = readPopulationFile(populationPath);
+    const beforeRetired = new Set(before.families.filter((family) => family.retired).map((family) => family.name));
+    const updated = updatePopulationFromRun(before, runEntry, session);
+    writePopulationFile(populationPath, updated);
+
+    const messages: string[] = [];
+    if (!(runEntry.asi && typeof runEntry.asi === "object" && !Array.isArray(runEntry.asi) && "candidate_id" in runEntry.asi)) {
+      messages.push(`Population: ASI candidate_id missing; used cand-run-${typeof runEntry.run === "number" ? runEntry.run : 0}. Include candidate_id, family, operator, hypothesis, genome.`);
+    }
+
+    const newlyRetired = updated.families
+      .filter((family) => family.retired && !beforeRetired.has(family.name))
+      .map((family) => family.name);
+    for (const family of newlyRetired) {
+      messages.push(`Population: retired family ${family} after repeated failed runs. Try a different family or novelty candidate.`);
+    }
+
+    return messages.length > 0 ? messages.join("\n") : null;
+  };
+
+  const populationBeforeSteer = (workDir: string, session: SessionSnapshot): string | null => {
+    ensurePopulationFile(workDir);
+    const recommendation = recommendNextCandidate(readPopulationFile(evoResearchPopulationPath(workDir)), session);
+    const avoid = recommendation.avoid.length > 0
+      ? `\nAvoid: ${recommendation.avoid.join(", ")}; retired after repeated failed runs.`
+      : "";
+    return `Population: ${recommendation.message}${avoid}`;
+  };
+
+  const combineSteers = (...steers: Array<string | null>): string | null => {
+    const parts = steers.filter((steer): steer is string => typeof steer === "string" && steer.trim().length > 0);
+    return parts.length > 0 ? parts.join("\n\n") : null;
+  };
+
   // Running experiment state (for spinner in fullscreen overlay)
   let overlayTui: { requestRender: () => void } | null = null;
   let spinnerInterval: ReturnType<typeof setInterval> | null = null;
@@ -1626,13 +1680,17 @@ export default function evoResearchExtension(pi: ExtensionAPI) {
       updateWidget(ctx);
 
       if (wasInactive) {
-        const steer = await fireHook({
-          event: "before",
-          cwd: workDir,
-          next_run: state.results.length + 1,
-          last_run: readLastRun(workDir),
-          session: buildSessionSnapshot(state),
-        });
+        const sessionSnapshot = buildSessionSnapshot(state);
+        const steer = combineSteers(
+          populationBeforeSteer(workDir, sessionSnapshot),
+          await fireHook({
+            event: "before",
+            cwd: workDir,
+            next_run: state.results.length + 1,
+            last_run: readLastRun(workDir),
+            session: sessionSnapshot,
+          }),
+        );
         if (steer) pi.sendUserMessage(steer, { deliverAs: "steer" });
       }
 
@@ -2429,12 +2487,16 @@ export default function evoResearchExtension(pi: ExtensionAPI) {
         }
       }
 
-      const afterSteer = await fireHook({
-        event: "after",
-        cwd: workDir,
-        run_entry: jsonlEntry,
-        session: buildSessionSnapshot(state),
-      });
+      const sessionSnapshot = buildSessionSnapshot(state);
+      const afterSteer = combineSteers(
+        updatePopulationState(workDir, jsonlEntry, sessionSnapshot),
+        await fireHook({
+          event: "after",
+          cwd: workDir,
+          run_entry: jsonlEntry,
+          session: sessionSnapshot,
+        }),
+      );
       if (afterSteer) pi.sendUserMessage(afterSteer, { deliverAs: "steer" });
 
       const wallClockSeconds = runtime.lastRunDuration;
@@ -2448,13 +2510,17 @@ export default function evoResearchExtension(pi: ExtensionAPI) {
         runtime.evoResearchMode = false;
         ctx.abort();
       } else if (runtime.evoResearchMode) {
-        const beforeSteer = await fireHook({
-          event: "before",
-          cwd: workDir,
-          next_run: state.results.length + 1,
-          last_run: jsonlEntry,
-          session: buildSessionSnapshot(state),
-        });
+        const nextSessionSnapshot = buildSessionSnapshot(state);
+        const beforeSteer = combineSteers(
+          populationBeforeSteer(workDir, nextSessionSnapshot),
+          await fireHook({
+            event: "before",
+            cwd: workDir,
+            next_run: state.results.length + 1,
+            last_run: jsonlEntry,
+            session: nextSessionSnapshot,
+          }),
+        );
         if (beforeSteer) pi.sendUserMessage(beforeSteer, { deliverAs: "steer" });
       }
 
@@ -3021,13 +3087,17 @@ export default function evoResearchExtension(pi: ExtensionAPI) {
       );
 
       const state = runtime.state;
-      const activationSteer = await fireHook({
-        event: "before",
-        cwd: workDir,
-        next_run: state.results.length + 1,
-        last_run: readLastRun(workDir),
-        session: buildSessionSnapshot(state),
-      });
+      const sessionSnapshot = buildSessionSnapshot(state);
+      const activationSteer = combineSteers(
+        populationBeforeSteer(workDir, sessionSnapshot),
+        await fireHook({
+          event: "before",
+          cwd: workDir,
+          next_run: state.results.length + 1,
+          last_run: readLastRun(workDir),
+          session: sessionSnapshot,
+        }),
+      );
 
       sendWhenReady(ctx, activationSteer ? `${activationSteer}\n\n${kickoff}` : kickoff);
     },

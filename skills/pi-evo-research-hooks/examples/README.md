@@ -1,6 +1,6 @@
 # Hook examples
 
-Reference scripts for `evo-research.hooks/before.sh` and `evo-research.hooks/after.sh`. Each file is a complete, self-contained example — pick the one closest to what you want, copy it to your session's `evo-research.hooks/` directory, adapt, and mark executable.
+Reference scripts for `evo-research.hooks/before.sh` and `evo-research.hooks/after.sh`. Each file is a complete, self-contained example — pick the one closest to what you want, copy it to your session's `evo-research.hooks/` directory, adapt, and mark executable. Core population scheduling is built into the extension; population hook examples are editable shell equivalents/customization points.
 
 These scripts ship with the `pi-evo-research-hooks` skill. When the skill is active, paths resolve against the skill directory, so the agent can copy them with:
 
@@ -9,7 +9,7 @@ cp "<skill-dir>/examples/before/external-search.sh" /path/to/session/evo-researc
 chmod +x /path/to/session/evo-research.hooks/before.sh
 ```
 
-The files here are **not** marked executable on purpose — they're references, not installed hooks. A `chmod +x` step is required when you wire one up. Scripts parse JSON with `jq`; install it first (`pkg install jq` on Termux, `brew install jq` on macOS).
+The files here are **not** marked executable on purpose — they're references, not installed hooks. A `chmod +x` step is required when you wire one up. Scripts parse JSON with `jq`; install it first (Linux: use your distro package manager, e.g. `apt install jq`; macOS: `brew install jq`).
 
 For the hook contract (stdin schemas, stdout handling, timeouts, observability), see the main [README §Hooks](../../../README.md#hooks-optional).
 

@@ -5,7 +5,7 @@ description: Author pre/post-iteration hooks for an evo-research session. Use wh
 
 # pi-evo-research-hooks
 
-Optional scripts that run at iteration boundaries in an evo-research session. Two hooks, both transparent to the loop-running agent — their effect is a file on disk or a steer message.
+Optional scripts that run at iteration boundaries in an evo-research session. Two hooks, both transparent to the loop-running agent — their effect is a file on disk or a steer message. Core population state is handled by the extension; hooks are for custom automation or policy overrides.
 
 ```
 evo-research.hooks/
@@ -13,7 +13,7 @@ evo-research.hooks/
   after.sh     # fires after each log_experiment (retrospective)
 ```
 
-Both files are optional. Files without the executable bit are silently ignored. Example scripts parse JSON with `jq`; install it before enabling them (`pkg install jq` on Termux, `brew install jq` on macOS).
+Both files are optional. Files without the executable bit are silently ignored. Example scripts parse JSON with `jq`; install it before enabling them (Linux: use your distro package manager, e.g. `apt install jq`; macOS: `brew install jq`).
 
 ---
 
@@ -132,11 +132,11 @@ Each example is a complete, self-contained script with named constants, short he
    chmod +x evo-research.hooks/before.sh
    ```
 
-   For population-guided scheduling, install `jq` and wire both population examples:
+   Population scheduling is built into the extension. If you want editable shell equivalents or custom policy overrides, install `jq` and wire both population examples:
 
    ```bash
-   # Termux: pkg install jq
-   # macOS:  brew install jq
+   # Linux: install jq with your distro package manager, e.g. apt install jq
+   # macOS: brew install jq
    mkdir -p evo-research.hooks
    cp "<skill-dir>/examples/after/population-update.sh" evo-research.hooks/after.sh
    cp "<skill-dir>/examples/before/population-scheduler.sh" evo-research.hooks/before.sh
