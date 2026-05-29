@@ -1,5 +1,4 @@
 <div align="center">
-<img height="120" alt="result" src="https://github.com/user-attachments/assets/c66cbd02-4491-4833-a63a-142cfd7530c1" />
 
 # pi-evo-research
 ### Population-guided evolutionary research for coding agents

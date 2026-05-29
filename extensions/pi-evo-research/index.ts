@@ -2714,7 +2714,6 @@ export default function evoResearchExtension(pi: ExtensionAPI) {
   // -----------------------------------------------------------------------
 
   const TITLE_PLACEHOLDER = "__AUTORESEARCH_TITLE__";
-  const LOGO_PLACEHOLDER = "__AUTORESEARCH_LOGO__";
 
   let cachedPackageRoot: string | null = null;
 
@@ -2731,16 +2730,6 @@ export default function evoResearchExtension(pi: ExtensionAPI) {
 
   function readTemplate(): string {
     return fs.readFileSync(templatePath(), "utf-8");
-  }
-
-  let cachedLogoDataUrl: string | null = null;
-
-  function logoDataUrl(): string {
-    if (cachedLogoDataUrl) return cachedLogoDataUrl;
-    const logoPath = path.join(packageRoot(), "assets/logo.webp");
-    const bytes = fs.readFileSync(logoPath);
-    cachedLogoDataUrl = `data:image/webp;base64,${bytes.toString("base64")}`;
-    return cachedLogoDataUrl;
   }
 
   function readJsonlContent(workDir: string): string {
@@ -2800,8 +2789,7 @@ export default function evoResearchExtension(pi: ExtensionAPI) {
   function writeDashboardFile(workDir: string): string {
     const jsonlContent = readJsonlContent(workDir);
     const sessionName = extractEvoResearchSessionName(jsonlContent);
-    const html = injectDataIntoTemplate(readTemplate(), sessionName)
-      .replace(LOGO_PLACEHOLDER, logoDataUrl());
+    const html = injectDataIntoTemplate(readTemplate(), sessionName);
     const exportDir = fs.mkdtempSync(path.join(tmpdir(), "pi-evo-research-dashboard-"));
     const dest = path.join(exportDir, "index.html");
     fs.writeFileSync(dest, html);

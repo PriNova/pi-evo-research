@@ -42,12 +42,12 @@
   "files": [
     "extensions",
     "skills",
-    "assets",
     "README.md",
     "CHANGELOG.md",
     "LICENSE",
     "package.json",
-    "NOTICE"
+    "NOTICE",
+    "assets/template.html"
   ],
   "scripts": {
     "test": "node --experimental-strip-types --test tests/*.test.mjs"
