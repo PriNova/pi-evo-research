@@ -170,4 +170,4 @@ Each example is a complete, self-contained script with named constants, short he
 
 - **One concern per script.** If you want research + learnings, put them in separate files (`before.sh` and `after.sh`). Don't bundle.
 
-- **No environment variables.** Everything is on stdin; extract `cwd` (and anything else) with `jq`. There is no `$AUTORESEARCH_WORK_DIR`.
+- **No environment variables.** Everything is on stdin; extract `cwd` (and anything else) with `jq`. There is no `$EVO_RESEARCH_WORK_DIR`.

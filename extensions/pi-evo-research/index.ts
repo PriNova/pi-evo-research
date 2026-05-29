@@ -2713,7 +2713,7 @@ export default function evoResearchExtension(pi: ExtensionAPI) {
   // Export: local live dashboard
   // -----------------------------------------------------------------------
 
-  const TITLE_PLACEHOLDER = "__AUTORESEARCH_TITLE__";
+  const TITLE_PLACEHOLDER = "__EVO_RESEARCH_TITLE__";
 
   let cachedPackageRoot: string | null = null;
 
