@@ -17,6 +17,7 @@ For the hook contract (stdin schemas, stdout handling, timeouts, observability),
 
 | Script | Purpose |
 | --- | --- |
+| [`population-scheduler.sh`](before/population-scheduler.sh) | Read `evo-research.population.json` and recommend mutation, novelty, or seeding. |
 | [`external-search.sh`](before/external-search.sh) | Mine agent notes for a query and fetch external material via your search tool of choice. |
 | [`qmd-search.sh`](before/qmd-search.sh) | Same shape, but targets a local [`qmd`](https://www.npmjs.com/package/qmd) BM25 / vector / rerank index over your project's markdown. |
 | [`anti-thrash.sh`](before/anti-thrash.sh) | After N consecutive discards, emit a steer suggesting a structural rethink. |
@@ -28,6 +29,7 @@ For the hook contract (stdin schemas, stdout handling, timeouts, observability),
 
 | Script | Purpose |
 | --- | --- |
+| [`population-update.sh`](after/population-update.sh) | Update `evo-research.population.json` from latest run ASI and retire repeated-failure families. |
 | [`learnings-journal.sh`](after/learnings-journal.sh) | Append one human-readable line per run to `evo-research.learnings.md`. |
 | [`macos-notify.sh`](after/macos-notify.sh) | Fire a native macOS banner only when the run is a new best. |
 | [`auto-tag-winners.sh`](after/auto-tag-winners.sh) | Tag every new best with a sortable git tag. |

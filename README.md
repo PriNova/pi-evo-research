@@ -179,15 +179,34 @@ The agent logs this through `log_experiment({ asi: ... })`. The extension alread
 | `evo-research.checks.sh` | Optional correctness/type/lint backpressure checks |
 | `evo-research.ideas.md` | Candidate backlog and deferred hypotheses |
 | `evo-research.jsonl` | Append-only experiment log, metrics, ASI, confidence, status |
+| `evo-research.population.json` | Optional persistent population state for broad or long evolutionary runs |
 | `evo-research.hooks/` | Optional before/after scripts for session automation |
 
-Optional future population state:
+`evo-research.population.json` is implemented as a small, inspectable MVP. It is optional: short sessions can rely on `evo-research.jsonl`, ASI, and `evo-research.ideas.md`; longer searches can use the population file to rank candidates, track family failures, and trigger novelty after stagnation.
 
-```text
-evo-research.population.json
+Minimal lifecycle:
+
+1. `after.sh` updates population state from the latest `log_experiment` entry and ASI.
+2. `before.sh` reads population state and prints a steer message for the next candidate.
+3. Benchmark results remain the source of truth; population state only guides which hypothesis to try next.
+
+Core shape:
+
+```json
+{
+  "schema_version": 1,
+  "generation": 0,
+  "active_candidate_id": null,
+  "stagnation_runs": 0,
+  "candidates": [],
+  "families": [],
+  "scheduler": {
+    "max_consecutive_family_failures": 3,
+    "novelty_after_stagnation_runs": 5,
+    "elite_limit": 3
+  }
+}
 ```
-
-Use this only when a long run needs explicit candidate ranking beyond `evo-research.ideas.md` and JSONL history.
 
 ---
 
@@ -203,6 +222,10 @@ Use `log_experiment` ASI to make evolutionary state durable:
   "parent_id": "cand-batch-io-v2",
   "operator": "mutation",
   "hypothesis": "Batch file reads before parsing",
+  "genome": {
+    "strategy": "batching",
+    "knobs": { "batch_size": 32 }
+  },
   "outcome_learning": "Reduced syscalls but increased memory pressure",
   "next_mutation": "Try smaller batch size and reuse buffer"
 }
@@ -216,8 +239,17 @@ This lets a resumed agent continue the search without relying on chat history.
 
 Hooks can act as a lightweight evolutionary scheduler without changing the extension:
 
-- `evo-research.hooks/after.sh`: read latest JSONL entry, update rankings, retire weak families.
-- `evo-research.hooks/before.sh`: print the next candidate suggestion as a steer message.
+- `evo-research.hooks/after.sh`: read latest JSONL entry, update `evo-research.population.json`, retire weak families.
+- `evo-research.hooks/before.sh`: read `evo-research.population.json` and print the next candidate suggestion as a steer message.
+
+Reference examples ship with the hooks skill:
+
+```bash
+mkdir -p evo-research.hooks
+cp "<skill-dir>/examples/after/population-update.sh" evo-research.hooks/after.sh
+cp "<skill-dir>/examples/before/population-scheduler.sh" evo-research.hooks/before.sh
+chmod +x evo-research.hooks/after.sh evo-research.hooks/before.sh
+```
 
 Good hook behavior:
 

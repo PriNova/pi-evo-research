@@ -108,8 +108,8 @@ One JSON line. Parse with `jq`. Realistic example:
 
 Runnable reference scripts live in this skill's `examples/` directory — one file per pattern. Paths are resolved against the skill directory (parent of SKILL.md). Browse them for inspiration; they're not policy.
 
-- `examples/before/` — external search, qmd document search, anti-thrash, idea rotator, hypothesis reflection, context rotation
-- `examples/after/` — learnings journal, macOS notification on new best, auto-tag winning commits
+- `examples/before/` — population scheduler, external search, qmd document search, anti-thrash, idea rotator, hypothesis reflection, context rotation
+- `examples/after/` — population update, learnings journal, macOS notification on new best, auto-tag winning commits
 
 Each example is a complete, self-contained script with named constants, short helper functions, guard clauses, and intention-revealing names. Read the header comment for its purpose, copy to `evo-research.hooks/<stage>.sh`, adapt.
 
@@ -130,6 +130,15 @@ Each example is a complete, self-contained script with named constants, short he
    cp "<skill-dir>/examples/before/external-search.sh" evo-research.hooks/before.sh
    # ... adapt the script ...
    chmod +x evo-research.hooks/before.sh
+   ```
+
+   For population-guided scheduling, wire both population examples:
+
+   ```bash
+   mkdir -p evo-research.hooks
+   cp "<skill-dir>/examples/after/population-update.sh" evo-research.hooks/after.sh
+   cp "<skill-dir>/examples/before/population-scheduler.sh" evo-research.hooks/before.sh
+   chmod +x evo-research.hooks/after.sh evo-research.hooks/before.sh
    ```
 
 5. **Sanity-test with a piped mock** before relying on it in the loop:
@@ -162,7 +171,7 @@ Each example is a complete, self-contained script with named constants, short he
 
 ## Rules of thumb
 
-- **Read whatever fields the agent naturally writes** — `asi.hypothesis`, `asi.next_focus`, `asi.learned`, `description`. Don't invent a "hook input" field and instruct the agent to populate it; that breaks the transparency principle.
+- **Read whatever fields the agent naturally writes** — `asi.hypothesis`, `asi.next_focus`, `asi.learned`, `description`. Population hooks may also read standard evolutionary ASI (`candidate_id`, `family`, `parent_id`, `operator`, `genome`). Don't invent a "hook input" field and instruct the agent to populate it; that breaks the transparency principle.
 
 - **Silent is the default.** Only print to stdout when you have something useful for the agent. Empty stdout means no steer.
 
