@@ -34,7 +34,9 @@ Canonical YAML artifacts at the resolved structured docs root. See repo/ for arc
 ## Publishing
 1. Bump version in package.json
 2. Add CHANGELOG section
-3. Push to main → CI auto-publishes via npm OIDC trusted publisher
+3. Run npm test
+4. Push to main
+5. Publish manually: npm publish --access public
 
 ## Constraints
 - No production dependencies
