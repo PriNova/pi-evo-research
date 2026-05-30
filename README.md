@@ -204,7 +204,11 @@ Core shape:
   "scheduler": {
     "max_consecutive_family_failures": 3,
     "novelty_after_stagnation_runs": 5,
-    "elite_limit": 3
+    "elite_limit": 3,
+    "max_consecutive_family_attempts": 2,
+    "explore_every_n_runs": 3,
+    "generation_size": 10,
+    "min_family_attempts_per_generation": 1
   }
 }
 ```

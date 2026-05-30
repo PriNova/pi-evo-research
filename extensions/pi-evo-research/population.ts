@@ -42,6 +42,10 @@ export interface PopulationScheduler {
   max_consecutive_family_failures: number;
   novelty_after_stagnation_runs: number;
   elite_limit: number;
+  max_consecutive_family_attempts: number;
+  explore_every_n_runs: number;
+  generation_size: number;
+  min_family_attempts_per_generation: number;
 }
 
 export interface PopulationState {
@@ -82,6 +86,10 @@ const DEFAULT_SCHEDULER: PopulationScheduler = {
   max_consecutive_family_failures: 3,
   novelty_after_stagnation_runs: 5,
   elite_limit: 3,
+  max_consecutive_family_attempts: 2,
+  explore_every_n_runs: 3,
+  generation_size: 10,
+  min_family_attempts_per_generation: 1,
 };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -126,6 +134,10 @@ function normalizeScheduler(value: unknown): PopulationScheduler {
     max_consecutive_family_failures: Math.max(1, numberFrom(scheduler.max_consecutive_family_failures, DEFAULT_SCHEDULER.max_consecutive_family_failures)),
     novelty_after_stagnation_runs: Math.max(1, numberFrom(scheduler.novelty_after_stagnation_runs, DEFAULT_SCHEDULER.novelty_after_stagnation_runs)),
     elite_limit: Math.max(1, numberFrom(scheduler.elite_limit, DEFAULT_SCHEDULER.elite_limit)),
+    max_consecutive_family_attempts: Math.max(1, numberFrom(scheduler.max_consecutive_family_attempts, DEFAULT_SCHEDULER.max_consecutive_family_attempts)),
+    explore_every_n_runs: Math.max(1, numberFrom(scheduler.explore_every_n_runs, DEFAULT_SCHEDULER.explore_every_n_runs)),
+    generation_size: Math.max(1, numberFrom(scheduler.generation_size, DEFAULT_SCHEDULER.generation_size)),
+    min_family_attempts_per_generation: Math.max(0, numberFrom(scheduler.min_family_attempts_per_generation, DEFAULT_SCHEDULER.min_family_attempts_per_generation)),
   };
 }
 
@@ -326,6 +338,72 @@ function candidateBestMetric(candidate: Candidate, direction: Direction): number
   return best;
 }
 
+function activeFamilies(population: PopulationState): Family[] {
+  return population.families.filter((family) => !family.retired).sort((a, b) => a.attempts - b.attempts || a.failures - b.failures || a.name.localeCompare(b.name));
+}
+
+function totalFamilyAttempts(population: PopulationState): number {
+  return population.families.reduce((total, family) => total + family.attempts, 0);
+}
+
+function familyAttemptHistory(population: PopulationState): Array<{ run: number; family: string }> {
+  const history: Array<{ run: number; family: string }> = [];
+  for (const candidate of population.candidates) {
+    for (const entry of candidate.fitness_history) {
+      history.push({ run: entry.run, family: candidate.family });
+    }
+  }
+  return history.sort((a, b) => a.run - b.run);
+}
+
+function lastFamilyAttemptStreak(population: PopulationState): { family: string | null; count: number } {
+  const history = familyAttemptHistory(population);
+  const last = history.at(-1)?.family ?? null;
+  if (!last) return { family: null, count: 0 };
+  let count = 0;
+  for (let i = history.length - 1; i >= 0 && history[i].family === last; i--) count += 1;
+  return { family: last, count };
+}
+
+function familyAttemptsThisGeneration(population: PopulationState, familyName: string): number {
+  const size = population.scheduler.generation_size;
+  const total = totalFamilyAttempts(population);
+  const generationStartRun = Math.floor(total / size) * size + 1;
+  return familyAttemptHistory(population).filter((entry) => entry.run >= generationStartRun && entry.family === familyName).length;
+}
+
+function candidateForFamily(population: PopulationState, familyName: string, direction: Direction): Candidate | null {
+  const candidates = population.candidates
+    .filter((candidate) => candidate.family === familyName && candidate.status === "elite")
+    .map((candidate, index) => ({ candidate, index, bestMetric: candidateBestMetric(candidate, direction) }))
+    .filter((item): item is { candidate: Candidate; index: number; bestMetric: number } => item.bestMetric !== null)
+    .sort((a, b) => {
+      if (a.bestMetric !== b.bestMetric) return direction === "higher" ? b.bestMetric - a.bestMetric : a.bestMetric - b.bestMetric;
+      return b.candidate.last_result_ref! - a.candidate.last_result_ref! || a.index - b.index;
+    });
+  return candidates[0]?.candidate ?? null;
+}
+
+function exploreFamilyRecommendation(population: PopulationState, family: Family, direction: Direction, reason: string, avoid: string[]): PopulationRecommendation {
+  const candidate = candidateForFamily(population, family.name, direction);
+  if (candidate) {
+    return {
+      mode: "mutate",
+      candidate_id: candidate.id,
+      family: family.name,
+      message: `${reason}; explore family ${family.name} by mutating its elite ${candidate.id}. Do not tunnel on the current global best unless evidence requires it.`,
+      avoid,
+    };
+  }
+  return {
+    mode: "seed",
+    candidate_id: null,
+    family: family.name,
+    message: `${reason}; seed a candidate in under-explored family ${family.name}. Log ASI with family=${family.name}.`,
+    avoid,
+  };
+}
+
 export function recommendNextCandidate(
   inputPopulation: PopulationState,
   session: SessionLike = {},
@@ -344,6 +422,11 @@ export function recommendNextCandidate(
     };
   }
 
+  const untriedFamily = activeFamilies(population).find((family) => family.attempts === 0);
+  if (untriedFamily) {
+    return exploreFamilyRecommendation(population, untriedFamily, direction, "Explore untried family before mutating elites", avoid);
+  }
+
   if (population.stagnation_runs >= population.scheduler.novelty_after_stagnation_runs) {
     return {
       mode: "novelty",
@@ -352,6 +435,28 @@ export function recommendNextCandidate(
       message: `Inject novelty; ${population.stagnation_runs} stagnant runs reached threshold ${population.scheduler.novelty_after_stagnation_runs}.`,
       avoid,
     };
+  }
+
+  const active = activeFamilies(population);
+  const lastStreak = lastFamilyAttemptStreak(population);
+  const forcedDifferentFamily = lastStreak.family && lastStreak.count >= population.scheduler.max_consecutive_family_attempts
+    ? active.find((family) => family.name !== lastStreak.family)
+    : undefined;
+  if (forcedDifferentFamily) {
+    return exploreFamilyRecommendation(population, forcedDifferentFamily, direction, `Explore another family; ${lastStreak.family} reached ${lastStreak.count} consecutive attempts`, avoid);
+  }
+
+  const generationUnderQuota = active.find((family) => familyAttemptsThisGeneration(population, family.name) < population.scheduler.min_family_attempts_per_generation);
+  if (generationUnderQuota) {
+    return exploreFamilyRecommendation(population, generationUnderQuota, direction, `Balance generation ${population.generation}; family ${generationUnderQuota.name} is below its minimum attempt quota`, avoid);
+  }
+
+  const totalAttempts = totalFamilyAttempts(population);
+  const intervalFamily = totalAttempts > 0 && totalAttempts % population.scheduler.explore_every_n_runs === 0
+    ? active.find((family) => family.name !== lastStreak.family) ?? active[0]
+    : undefined;
+  if (intervalFamily) {
+    return exploreFamilyRecommendation(population, intervalFamily, direction, `Deterministic exploration interval ${population.scheduler.explore_every_n_runs} reached at attempt ${totalAttempts}`, avoid);
   }
 
   const elites = population.candidates

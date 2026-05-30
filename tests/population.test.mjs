@@ -45,6 +45,10 @@ test("default population has deterministic schema and scheduler defaults", () =>
     max_consecutive_family_failures: 3,
     novelty_after_stagnation_runs: 5,
     elite_limit: 3,
+    max_consecutive_family_attempts: 2,
+    explore_every_n_runs: 3,
+    generation_size: 10,
+    min_family_attempts_per_generation: 1,
   });
 });
 
@@ -153,6 +157,50 @@ test("recommendNextCandidate mutates best non-retired elite", () => {
   assert.equal(recommendation.candidate_id, "cand-b");
   assert.equal(recommendation.family, "b");
   assert.match(recommendation.message, /Mutate elite cand-b/);
+});
+
+test("recommendNextCandidate explores predeclared untried families before mutating elites", () => {
+  let population = defaultPopulation();
+  population = updatePopulationFromRun(population, run({ run: 1, metric: 10, asi: { candidate_id: "cand-a", family: "a" } }), { direction: "lower" });
+  population.families.push({ name: "tree_shape", attempts: 0, failures: 0, keeps: 0, retired: false, consecutive_failures: 0 });
+
+  const recommendation = recommendNextCandidate(population, { direction: "lower" });
+
+  assert.equal(recommendation.mode, "seed");
+  assert.equal(recommendation.candidate_id, null);
+  assert.equal(recommendation.family, "tree_shape");
+  assert.match(recommendation.message, /Explore untried family/);
+});
+
+test("recommendNextCandidate forces exploration after repeated attempts in one family", () => {
+  let population = defaultPopulation();
+  population = updatePopulationFromRun(population, run({ run: 1, metric: 10, asi: { candidate_id: "cand-a1", family: "a" } }), { direction: "lower" });
+  population = updatePopulationFromRun(population, run({ run: 2, metric: 9, asi: { candidate_id: "cand-a2", family: "a" } }), { direction: "lower" });
+  population = updatePopulationFromRun(population, run({ run: 3, metric: 8, asi: { candidate_id: "cand-b", family: "b" } }), { direction: "lower" });
+  population = updatePopulationFromRun(population, run({ run: 4, metric: 7, asi: { candidate_id: "cand-a3", family: "a" } }), { direction: "lower" });
+  population = updatePopulationFromRun(population, run({ run: 5, metric: 6, asi: { candidate_id: "cand-a4", family: "a" } }), { direction: "lower" });
+
+  const recommendation = recommendNextCandidate(population, { direction: "lower" });
+
+  assert.equal(recommendation.mode, "mutate");
+  assert.equal(recommendation.family, "b");
+  assert.equal(recommendation.candidate_id, "cand-b");
+  assert.match(recommendation.message, /Explore another family/);
+});
+
+test("recommendNextCandidate uses deterministic exploration intervals", () => {
+  let population = defaultPopulation();
+  population.scheduler.max_consecutive_family_attempts = 10;
+  population = updatePopulationFromRun(population, run({ run: 1, metric: 10, asi: { candidate_id: "cand-a", family: "a" } }), { direction: "lower" });
+  population = updatePopulationFromRun(population, run({ run: 2, metric: 7, asi: { candidate_id: "cand-b", family: "b" } }), { direction: "lower" });
+  population = updatePopulationFromRun(population, run({ run: 3, metric: 6, asi: { candidate_id: "cand-c", family: "a" } }), { direction: "lower" });
+
+  const recommendation = recommendNextCandidate(population, { direction: "lower" });
+
+  assert.equal(recommendation.mode, "mutate");
+  assert.equal(recommendation.family, "b");
+  assert.equal(recommendation.candidate_id, "cand-b");
+  assert.match(recommendation.message, /Deterministic exploration interval/);
 });
 
 test("recommendNextCandidate injects novelty after stagnation threshold", () => {

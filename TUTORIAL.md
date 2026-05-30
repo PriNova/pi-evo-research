@@ -195,7 +195,11 @@ After initialization, edit `evo-research.population.json` to tune scheduling:
   "scheduler": {
     "max_consecutive_family_failures": 3,
     "novelty_after_stagnation_runs": 5,
-    "elite_limit": 3
+    "elite_limit": 3,
+    "max_consecutive_family_attempts": 2,
+    "explore_every_n_runs": 3,
+    "generation_size": 10,
+    "min_family_attempts_per_generation": 1
   }
 }
 ```
@@ -205,6 +209,10 @@ Meaning:
 - `max_consecutive_family_failures`: retire a family after this many consecutive failed runs.
 - `novelty_after_stagnation_runs`: inject novelty after this many stagnant/non-improving runs.
 - `elite_limit`: number of elite candidates considered for mutation.
+- `max_consecutive_family_attempts`: force another active family after this many same-family attempts.
+- `explore_every_n_runs`: deterministically explore a non-current active family on this cadence.
+- `generation_size`: attempt count used for per-generation quota windows.
+- `min_family_attempts_per_generation`: minimum attempts each active family should receive per generation window.
 
 Defaults are conservative. For short A/B runs, a more aggressive schedule can help:
 
@@ -213,19 +221,25 @@ Defaults are conservative. For short A/B runs, a more aggressive schedule can he
   "scheduler": {
     "max_consecutive_family_failures": 2,
     "novelty_after_stagnation_runs": 4,
-    "elite_limit": 3
+    "elite_limit": 3,
+    "max_consecutive_family_attempts": 2,
+    "explore_every_n_runs": 3,
+    "generation_size": 10,
+    "min_family_attempts_per_generation": 1
   }
 }
 ```
 
-### What is not first-class config
+### Scheduler behavior
 
-The current built-in scheduler does not directly expose:
+The built-in scheduler is deterministic. It recommends, in order:
 
-- population size,
-- candidates per generation,
-- populations per iteration,
-- max generations.
+1. untried active families before elite mutation,
+2. novelty after the stagnation threshold,
+3. another active family after a same-family attempt streak,
+4. under-quota families within the current generation window,
+5. interval-based exploration,
+6. otherwise, mutation of the best non-retired elite.
 
 Current model:
 
@@ -233,7 +247,7 @@ Current model:
 1 iteration = 1 candidate experiment
 ```
 
-Use `maxIterations` plus instructions in `evo-research.md` for generation-style runs, e.g. “treat every 10 iterations as one generation, stop after 4 generations.” For stricter custom policy, use hooks.
+Use `maxIterations` plus `generation_size` for generation-style runs. For project-specific policies beyond this deterministic scheduler, use hooks.
 
 ## 9. Hooks for custom policy
 
@@ -395,7 +409,11 @@ After `evo-research.population.json` appears, optionally tune scheduler for A/B:
   "scheduler": {
     "max_consecutive_family_failures": 2,
     "novelty_after_stagnation_runs": 4,
-    "elite_limit": 3
+    "elite_limit": 3,
+    "max_consecutive_family_attempts": 2,
+    "explore_every_n_runs": 3,
+    "generation_size": 10,
+    "min_family_attempts_per_generation": 1
   }
 }
 ```
