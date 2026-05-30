@@ -1,6 +1,6 @@
 {
   "name": "pi-evo-research",
-  "version": "1.6.0",
+  "version": "1.6.1",
   "type": "module",
   "description": "Population-guided evolutionary research for pi — evolve hypotheses, run measured experiments, keep what works.",
   "keywords": [

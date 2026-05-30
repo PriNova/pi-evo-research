@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+## [1.6.1] - 2026-05-30
+
+### Changed
+
+- Migrated peer and dev dependency from `@sinclair/typebox` (0.34.x) to `typebox` (1.x), matching pi-mono's canonical TypeBox policy.
+- Switched package manager from pnpm to npm (removed `packageManager` field, deleted `pnpm-lock.yaml`).
+
+### Removed
+
+- Removed `.github/workflows` (CI and publish).
+
 ## [1.6.0] - 2026-05-30
 
 ### Added
