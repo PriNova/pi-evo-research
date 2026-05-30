@@ -330,7 +330,7 @@
     }
 
     function loadFromText(text) {
-      const parsed = parseEvo ResearchText(text);
+      const parsed = parseEvoResearchText(text);
       if (!parsed.ok) return setMetaMessage('Invalid embedded data: ' + parsed.error, true);
 
       lastDataText = text;
@@ -374,7 +374,7 @@
         .catch(() => setMetaMessage('Failed to load evo-research.jsonl.', true));
     }
 
-    function parseEvo ResearchText(text) {
+    function parseEvoResearchText(text) {
       const trimmed = text.trim();
       if (!trimmed) return fail('File is empty.');
       return looksLikeJsonLines(trimmed) ? parseJsonLines(trimmed) : parseJsonDocument(trimmed);
