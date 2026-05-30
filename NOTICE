@@ -1,5 +1,5 @@
 pi-evo-research
 
-This project is derived from pi extension work by David Cortés (@davebcn87) and is inspired by Andrej Karpathy's autonomous research loop idea.
+This project is derived from David Cortés' pi-autoresearch work (@davebcn87), his pi adaptation of Andrej Karpathy's autoresearch idea.
 
 This fork intentionally uses separate command names, extension names, config files, and session artifacts from the original project so both systems can be installed and benchmarked side by side.

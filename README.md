@@ -9,7 +9,7 @@
 
 `pi-evo-research` helps a coding agent optimize software by running measured experiments, keeping improvements, discarding regressions, and maintaining a diverse population of candidate hypotheses.
 
-It builds on `pi-evo-research` by David Cortés ([@davebcn87](https://github.com/davebcn87)) and the evo-research pattern popularized by [karpathy/evo-research](https://github.com/karpathy/evo-research), but adds a more explicit search policy: avoid pure hill-climbing, track candidate families, mutate promising ideas, retire dead ends, and inject novelty when progress stalls.
+It builds on David Cortés' [`pi-autoresearch`](https://github.com/davebcn87/pi-autoresearch), which adapts Andrej Karpathy's [`autoresearch`](https://github.com/karpathy/autoresearch) idea for pi. `pi-evo-research` adds a more explicit search policy: avoid pure hill-climbing, track candidate families, mutate promising ideas, retire dead ends, and inject novelty when progress stalls.
 
 The core principle:
 
@@ -302,7 +302,7 @@ Confidence is advisory. It estimates whether the best improvement is larger than
 
 ## Acknowledgements
 
-`pi-evo-research` is derived from David Cortés' original pi extension work ([@davebcn87](https://github.com/davebcn87)) and inspired by Andrej Karpathy's autonomous research loop idea.
+`pi-evo-research` is derived from David Cortés' [`pi-autoresearch`](https://github.com/davebcn87/pi-autoresearch), his pi adaptation of Andrej Karpathy's [`autoresearch`](https://github.com/karpathy/autoresearch) idea.
 
 ## Positioning
 
@@ -312,7 +312,7 @@ Short version:
 
 Longer version:
 
-> Built on David Cortés' pi-evo-research work and inspired by Karpathy's evo-research idea, `pi-evo-research` explores a population of hypotheses instead of hill-climbing one idea at a time.
+> Built on David Cortés' pi-autoresearch adaptation of Karpathy's autoresearch idea, `pi-evo-research` explores a population of hypotheses instead of hill-climbing one idea at a time.
 
 ---
 
