@@ -3,7 +3,7 @@
 # pi-evo-research
 ### Population-guided evolutionary research for coding agents
 
-**[Install](#install)** · **[Usage](#usage)** · **[Evolutionary mode](#evolutionary-mode)** · **[Glossary](GLOSSARY.md)**
+**[Install](#install)** · **[Usage](#usage)** · **[Tutorial](TUTORIAL.md)** · **[Evolutionary mode](#evolutionary-mode)** · **[Glossary](GLOSSARY.md)**
 
 </div>
 
