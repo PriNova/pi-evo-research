@@ -4,6 +4,24 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+## [1.6.0] - 2026-05-30
+
+### Added
+
+- Added `TUTORIAL.md` with end-to-end setup, benchmark, checks, population scheduling, hook, and dashboard guidance.
+- Added `GLOSSARY.md` and package it with releases to clarify evolutionary-search terms.
+- Added dashboard template JavaScript syntax test coverage.
+
+### Changed
+
+- Balanced population scheduling to explore untried families, cap consecutive attempts in one family, enforce per-generation family quotas, and trigger deterministic exploration intervals.
+- `run_experiment` now ensures generated `evo-research.sh` and optional `evo-research.checks.sh` scripts are executable before running them.
+- Updated docs and skill instructions to mark generated shell scripts executable and to remove remaining upstream/autoresearch attribution wording.
+
+### Fixed
+
+- Fixed dashboard template JavaScript syntax by correcting the embedded parser function name.
+
 ## [1.5.0] - 2026-05-30
 
 ### Changed
