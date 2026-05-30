@@ -18,7 +18,7 @@ Population-guided autonomous experiment loop: maintain candidate hypotheses, try
 1. Ask (or infer): **Goal**, **Command**, **Metric** (+ direction), **Files in scope**, **Constraints**.
 2. `git checkout -b evo-research/<goal>-<date>`
 3. Read the source files. Understand the workload deeply before writing anything.
-4. Write `evo-research.md` and `evo-research.sh` (see below). Commit both.
+4. Write `evo-research.md` and `evo-research.sh` (see below), then run `chmod +x evo-research.sh` before invoking it. Commit both.
 5. `init_experiment` → run baseline → `log_experiment` → start looping immediately. The extension creates and updates `evo-research.population.json` automatically.
 
 ### `evo-research.md`
@@ -99,7 +99,7 @@ JSON config file that lives in the pi session's working directory (`ctx.cwd`). S
 
 ### `evo-research.checks.sh` (optional)
 
-Bash script (`set -euo pipefail`) for backpressure/correctness checks: tests, types, lint, etc. **Only create this file when the user's constraints require correctness validation** (e.g., "tests must pass", "types must check").
+Bash script (`set -euo pipefail`) for backpressure/correctness checks: tests, types, lint, etc. **Only create this file when the user's constraints require correctness validation** (e.g., "tests must pass", "types must check"). If you create it, run `chmod +x evo-research.checks.sh` before it is invoked.
 
 When this file exists:
 - Runs automatically after every **passing** benchmark in `run_experiment`.

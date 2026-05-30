@@ -175,12 +175,22 @@ The agent logs this through `log_experiment({ asi: ... })`. The extension alread
 | File | Purpose |
 |---|---|
 | `evo-research.md` | Session plan and durable context for future agents |
-| `evo-research.sh` | Benchmark script that emits `METRIC name=value` lines |
-| `evo-research.checks.sh` | Optional correctness/type/lint backpressure checks |
+| `evo-research.sh` | Executable benchmark script that emits `METRIC name=value` lines |
+| `evo-research.checks.sh` | Optional executable correctness/type/lint backpressure checks |
 | `evo-research.ideas.md` | Candidate backlog and deferred hypotheses |
 | `evo-research.jsonl` | Append-only experiment log, metrics, ASI, confidence, status |
 | `evo-research.population.json` | Optional persistent population state for broad or long evolutionary runs |
 | `evo-research.hooks/` | Optional before/after scripts for session automation |
+
+Generated shell scripts should be marked executable before the agent invokes them:
+
+```bash
+chmod +x evo-research.sh
+# if present:
+chmod +x evo-research.checks.sh
+```
+
+`run_experiment` also applies `chmod +x` to `evo-research.sh` and `evo-research.checks.sh` before invocation as a safety net.
 
 `evo-research.population.json` is created and maintained by the extension. It is small, inspectable state for ranking candidates, tracking family failures, and triggering novelty after stagnation.
 

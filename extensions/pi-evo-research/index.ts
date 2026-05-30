@@ -338,6 +338,17 @@ function killTree(pid: number): void {
   }
 }
 
+function ensureShellScriptExecutable(scriptPath: string): string | null {
+  try {
+    const stat = fs.statSync(scriptPath);
+    if (!stat.isFile() || (stat.mode & 0o111) !== 0) return null;
+    fs.chmodSync(scriptPath, stat.mode | 0o111);
+    return null;
+  } catch (e) {
+    return e instanceof Error ? e.message : String(e);
+  }
+}
+
 /**
  * Check if a command's primary purpose is running evo-research.sh.
  *
@@ -1766,7 +1777,8 @@ export default function evoResearchExtension(pi: ExtensionAPI) {
 
       // Guard: if evo-research.sh exists, only allow running it
       const evoResearchShPath = evoResearchScriptPath(workDir);
-      if (fs.existsSync(evoResearchShPath) && !isEvoResearchShCommand(params.command)) {
+      const evoResearchShExists = fs.existsSync(evoResearchShPath);
+      if (evoResearchShExists && !isEvoResearchShCommand(params.command)) {
         return {
           content: [{
             type: "text",
@@ -1786,6 +1798,31 @@ export default function evoResearchExtension(pi: ExtensionAPI) {
             checksDuration: 0,
           } as RunDetails,
         };
+      }
+
+      if (evoResearchShExists) {
+        const chmodError = ensureShellScriptExecutable(evoResearchShPath);
+        if (chmodError) {
+          return {
+            content: [{
+              type: "text",
+              text: `❌ Failed to chmod +x evo-research.sh before running it.\n\nPath: ${evoResearchShPath}\nError: ${chmodError}`,
+            }],
+            details: {
+              command: params.command,
+              exitCode: null,
+              durationSeconds: 0,
+              passed: false,
+              crashed: true,
+              timedOut: false,
+              tailOutput: "",
+              checksPass: null,
+              checksTimedOut: false,
+              checksOutput: "",
+              checksDuration: 0,
+            } as RunDetails,
+          };
+        }
       }
 
       // TODO(/tree): replace compaction-based resume with a checkpoint-per-iteration model.
@@ -1971,22 +2008,29 @@ export default function evoResearchExtension(pi: ExtensionAPI) {
 
       const checksPath = evoResearchChecksPath(workDir);
       if (benchmarkPassed && fs.existsSync(checksPath)) {
+        const chmodError = ensureShellScriptExecutable(checksPath);
         const checksTimeout = (params.checks_timeout_seconds ?? 300) * 1000;
         const ct0 = Date.now();
-        try {
-          const checksResult = await pi.exec("bash", [checksPath], {
-            signal,
-            timeout: checksTimeout,
-            cwd: workDir,
-          });
-          checksDuration = (Date.now() - ct0) / 1000;
-          checksTimedOut = !!checksResult.killed;
-          checksPass = checksResult.code === 0 && !checksResult.killed;
-          checksOutput = (checksResult.stdout + "\n" + checksResult.stderr).trim();
-        } catch (e) {
-          checksDuration = (Date.now() - ct0) / 1000;
+        if (chmodError) {
           checksPass = false;
-          checksOutput = e instanceof Error ? e.message : String(e);
+          checksOutput = `Failed to chmod +x evo-research.checks.sh before running it.\n\nPath: ${checksPath}\nError: ${chmodError}`;
+          checksDuration = (Date.now() - ct0) / 1000;
+        } else {
+          try {
+            const checksResult = await pi.exec("bash", [checksPath], {
+              signal,
+              timeout: checksTimeout,
+              cwd: workDir,
+            });
+            checksDuration = (Date.now() - ct0) / 1000;
+            checksTimedOut = !!checksResult.killed;
+            checksPass = checksResult.code === 0 && !checksResult.killed;
+            checksOutput = (checksResult.stdout + "\n" + checksResult.stderr).trim();
+          } catch (e) {
+            checksDuration = (Date.now() - ct0) / 1000;
+            checksPass = false;
+            checksOutput = e instanceof Error ? e.message : String(e);
+          }
         }
       }
 

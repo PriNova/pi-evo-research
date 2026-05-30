@@ -44,18 +44,22 @@ Typical files in the project root:
 | File | Purpose |
 |---|---|
 | `evo-research.md` | Durable session plan: objective, metrics, scope, constraints, tried ideas |
-| `evo-research.sh` | Benchmark script; must print `METRIC name=value` lines |
-| `evo-research.checks.sh` | Optional correctness checks run after passing benchmarks |
+| `evo-research.sh` | Executable benchmark script; must print `METRIC name=value` lines |
+| `evo-research.checks.sh` | Optional executable correctness checks run after passing benchmarks |
 | `evo-research.jsonl` | Append-only experiment log |
 | `evo-research.population.json` | Population state for candidate families, elites, novelty, stagnation |
 | `evo-research.ideas.md` | Optional backlog of future hypotheses |
 | `evo-research.hooks/` | Optional before/after automation hooks |
 
-The benchmark script should be executable:
+Generated shell scripts should be executable before the agent invokes them:
 
 ```bash
 chmod +x evo-research.sh
+# if present:
+chmod +x evo-research.checks.sh
 ```
+
+`run_experiment` also applies `chmod +x` to these files before invocation as a safety net.
 
 ## 4. Benchmark script requirements
 
@@ -101,7 +105,7 @@ set -euo pipefail
 make check >/dev/null
 ```
 
-When present, checks run automatically after successful benchmarks. Check time does **not** count toward the primary metric. A result with failing checks must be logged as `checks_failed`, not `keep`.
+When present, checks run automatically after successful benchmarks. Mark the file executable with `chmod +x evo-research.checks.sh` after creating it. Check time does **not** count toward the primary metric. A result with failing checks must be logged as `checks_failed`, not `keep`.
 
 ## 6. Experiment lifecycle
 
