@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+## [1.5.0] - 2026-05-30
+
 ### Changed
 
 - Renamed package, extension directory, command, config file, session artifacts, hooks directory, skills, dashboard widget key, and tests to `pi-evo-research` / `evo-research` names so this project can be installed and benchmarked side by side with its upstream predecessor.
