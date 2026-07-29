@@ -1,6 +1,6 @@
 {
   "name": "pi-evo-research",
-  "version": "1.6.1",
+  "version": "1.6.2",
   "type": "module",
   "description": "Population-guided evolutionary research for pi — evolve hypotheses, run measured experiments, keep what works.",
   "keywords": [
@@ -62,9 +62,16 @@
   },
   "devDependencies": {
     "typebox": "^1.1.38",
-    "@earendil-works/pi-ai": "^0.77.0",
-    "@earendil-works/pi-coding-agent": "^0.77.0",
-    "@earendil-works/pi-tui": "^0.77.0"
+    "@earendil-works/pi-ai": "^0.82.1",
+    "@earendil-works/pi-coding-agent": "^0.82.1",
+    "@earendil-works/pi-tui": "^0.82.1"
+  },
+  "overrides": {
+    "@earendil-works/pi-coding-agent@^0.82.1": {
+      "brace-expansion": "5.0.8"
+    },
+    "protobufjs": "7.6.5",
+    "ws": "8.21.1"
   },
   "contributors": [
     "David Cortés <477473+davebcn87@users.noreply.github.com>"

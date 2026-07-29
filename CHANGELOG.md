@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+## [1.6.2] - 2026-07-29
+
+### Changed
+
+- Updated pi development dependencies to `@earendil-works` 0.82.1 and verified extension loading, RPC startup, and the full test suite against that release.
+
+### Fixed
+
+- Fixed strict TypeScript compatibility for configurable dashboard shortcuts by using pi-tui's `KeyId` type.
+- Fixed the secondary-metrics type assertion for TypeBox's additional-properties schema inference.
+- Pinned patched transitive development dependencies for `brace-expansion`, `protobufjs`, and `ws`, producing a clean npm audit.
+- Synchronized npm lockfile package metadata with the published package version.
+
 ## [1.6.1] - 2026-05-30
 
 ### Changed

@@ -2311,7 +2311,7 @@ export default function evoResearchExtension(pi: ExtensionAPI) {
         };
       }
       const workDir = resolveWorkDir(ctx.cwd);
-      const secondaryMetrics = params.metrics ?? {};
+      const secondaryMetrics = (params.metrics ?? {}) as Record<string, number>;
 
       // Gate: prevent "keep" when last run's checks failed
       if (params.status === "keep" && runtime.lastRunChecks && !runtime.lastRunChecks.pass) {
